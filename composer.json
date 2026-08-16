@@ -1,5 +1,5 @@
 {
-    "name": "databasebackupsync/database-backup-sync",
+    "name": "xslain/database-backup-sync",
     "description": "Automated 24-hour database backups with multi-cloud upload (S3, Google Drive, OneDrive, local), AES-256-GCM/GPG encryption, retention, integrity verification, and observability for Laravel.",
     "keywords": [
         "laravel",
@@ -17,6 +17,13 @@
     ],
     "license": "MIT",
     "type": "library",
+    "authors": [
+        {
+            "name": "Xslain Innovations Limited",
+            "email": "info@xslain.com",
+            "role": "Developer"
+        }
+    ],
     "require": {
         "php": "^8.1",
         "ext-json": "*",
@@ -65,7 +72,9 @@
             "aliases": {
                 "DatabaseBackup": "DatabaseBackupSync\\Facades\\DatabaseBackup"
             }
-        }
+        },
+        "company": "Xslain Innovations Limited",
+        "phone": "+2348112960711"
     },
     "config": {
         "sort-packages": true
