@@ -1,0 +1,82 @@
+{
+    "name": "databasebackupsync/database-backup-sync",
+    "description": "Automated 24-hour database backups with multi-cloud upload (S3, Google Drive, OneDrive, local), AES-256-GCM/GPG encryption, retention, integrity verification, and observability for Laravel.",
+    "keywords": [
+        "laravel",
+        "backup",
+        "database",
+        "mysql",
+        "postgresql",
+        "sqlite",
+        "sqlserver",
+        "s3",
+        "google-drive",
+        "onedrive",
+        "encryption",
+        "retention"
+    ],
+    "license": "MIT",
+    "type": "library",
+    "require": {
+        "php": "^8.1",
+        "ext-json": "*",
+        "ext-openssl": "*",
+        "ext-pdo": "*",
+        "guzzlehttp/guzzle": "^7.4",
+        "illuminate/console": "^8.83|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "illuminate/contracts": "^8.83|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "illuminate/database": "^8.83|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "illuminate/events": "^8.83|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "illuminate/filesystem": "^8.83|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "illuminate/http": "^8.83|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "illuminate/log": "^8.83|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "illuminate/mail": "^8.83|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "illuminate/notifications": "^8.83|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "illuminate/support": "^8.83|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "nesbot/carbon": "^2.62|^3.0",
+        "symfony/process": "^5.4|^6.0|^7.0"
+    },
+    "require-dev": {
+        "aws/aws-sdk-php": "^3.200",
+        "mockery/mockery": "^1.5",
+        "orchestra/testbench": "^5.0|^6.0|^7.0|^8.0|^9.0|^10.0",
+        "phpunit/phpunit": "^9.6|^10.5|^11.0"
+    },
+    "suggest": {
+        "aws/aws-sdk-php": "Required for the S3 driver (multipart + resumable uploads).",
+        "ext-gnupg": "Required for GPG symmetric/recipient encryption via the gnupg extension.",
+        "gpg": "The gpg binary is used by the GPG shell fallback when ext-gnupg is unavailable."
+    },
+    "autoload": {
+        "psr-4": {
+            "DatabaseBackupSync\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DatabaseBackupSync\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "DatabaseBackupSync\\DatabaseBackupServiceProvider"
+            ],
+            "aliases": {
+                "DatabaseBackup": "DatabaseBackupSync\\Facades\\DatabaseBackup"
+            }
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test:unit": "phpunit --testsuite=Unit",
+        "test:integration": "phpunit --testsuite=Integration",
+        "test:feature": "phpunit --testsuite=Feature",
+        "lint": "php -l src/Manager.php"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
