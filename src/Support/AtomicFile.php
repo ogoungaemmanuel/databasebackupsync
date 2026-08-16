@@ -48,6 +48,12 @@ class AtomicFile
      */
     public static function move(string $from, string $to): void
     {
+        $dir = dirname($to);
+
+        if (! is_dir($dir) && ! @mkdir($dir, 0755, true) && ! is_dir($dir)) {
+            throw new RuntimeException("Cannot create directory [{$dir}].");
+        }
+
         if (! @rename($from, $to)) {
             if (! @copy($from, $to)) {
                 throw new RuntimeException("Atomic move failed from [{$from}] to [{$to}].");
