@@ -200,3 +200,72 @@ php artisan view:clear
 | Secrets committed to `config/database-backup.php` | Move to `.env` / secret manager |
 | Backup succeeds but uploads fail silently | Check `laravel.log` for `database-backup:` entries; enable `DB_BACKUP_NOTIFY_FAILURE` |
 | Temp files accumulate | `DB_BACKUP_TEMP_PATH` is cleaned per run; ensure the web user can write to it |
+
+---
+
+## 9. Multi-domain deployments (one credential set, many apps)
+
+A single Google Drive OAuth credential set (client id + secret + refresh token) can be used
+by **any number of domains/servers**. The refresh token is not bound to a machine, a domain,
+or an IP — each app exchanges it for its own access tokens server-side. Run the consent flow
+**once** (dev machine), then copy the same four env values into every domain's `.env`.
+
+### Recommended: one Drive folder per domain
+
+Each domain should have its **own** folder:
+
+```dotenv
+# domain-a
+DB_BACKUP_DRIVE_FOLDER_ID=1AbCdEfGhIjKlMnOpQrStUvWxYzA
+
+# domain-b
+DB_BACKUP_DRIVE_FOLDER_ID=1AbCdEfGhIjKlMnOpQrStUvWxYzB
+```
+
+Share each folder with the **same Google account** that granted the token (Editor), then
+point `DB_BACKUP_DRIVE_FOLDER_ID` at the matching folder per domain.
+
+**Why per-domain folders are strongly recommended:**
+
+1. **Prune cross-deletion.** `db:backup` prunes automatically after every upload
+   (`DB_BACKUP_PRUNE_ON_BACKUP=true`, the default). The Drive driver lists **every file in the
+   configured folder** — the `prefix` config is not applied by the Google Drive driver — so a
+   shared folder makes each domain's retention policy (`days`/`count`/`max_total_size`) count
+   **and delete the other domains' backups**. One domain with a tight `count` can wipe another's
+   history.
+2. **Attribution.** Default filenames are `backup-<connection>-<timestamp>-<hex>.sql` — with
+   multiple apps in one folder you cannot tell which domain produced which file.
+3. **Storage-usage alerts.** `StorageUsageAlert` measures the whole folder, so one domain's
+   growth triggers alerts everywhere.
+
+If a shared folder is unavoidable (e.g. one managed Drive for the whole org), **disable
+auto-prune in every domain** and prune manually per folder:
+
+```dotenv
+DB_BACKUP_PRUNE_ON_BACKUP=false
+# and/or
+DB_BACKUP_RETENTION=false
+```
+
+### Shared-account constraints
+
+- **Storage quota is shared.** All domains upload against the one account's quota (15 GB free
+  per Google account). Budget `backup size × retention days × domains` before enabling the
+  second domain.
+- **One token = one point of failure.** A revoked/expired token (testing-mode 7-day expiry, or
+  Google's 6-month max-lifetime policy for new clients) breaks **every** domain at once. If you
+  must re-run the OAuth flow, update all domains' `.env` together.
+- **Test users.** While the consent screen is in Testing, each Google account that runs the
+  flow must be listed under **Test users**, and refresh tokens expire after 7 days — publish the
+  consent screen to Production once the publish 500 clears (retry; missing app name / support
+  email / contact email on the consent screen causes it).
+
+### Rolling out
+
+1. Deploy the package (with the fixed dumpers/driver — see section 7; manual vendor patches are
+   wiped by `composer update`) to **one** domain first.
+2. `php artisan db:backup:test` then `php artisan db:backup` on that domain; verify the file
+   lands in its folder.
+3. Repeat per domain, each with its own `DB_BACKUP_DRIVE_FOLDER_ID`.
+4. Monitor `laravel.log` for `database-backup:` errors on all domains after the first
+   scheduled run.
