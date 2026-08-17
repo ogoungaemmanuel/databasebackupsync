@@ -142,7 +142,7 @@ class GoogleDriveDriver extends AbstractDriver
         do {
             $query = [
                 'q' => sprintf("'%s' in parents and trashed = false", $this->folderId() ?? 'root'),
-                'fields' => 'nextPageToken,files(id,name,size,modifiedTime,md5Checksum)',
+                'fields' => 'nextPageToken,files(id,name,size,modifiedTime,sha256Checksum)',
                 'pageSize' => 1000,
                 'orderBy' => 'modifiedTime desc',
             ];
@@ -164,7 +164,7 @@ class GoogleDriveDriver extends AbstractDriver
                     path: (string) $file['name'],
                     size: (int) ($file['size'] ?? 0),
                     lastModified: isset($file['modifiedTime']) ? strtotime((string) $file['modifiedTime']) : null,
-                    checksum: $file['md5Checksum'] ?? null,
+                    checksum: $file['sha256Checksum'] ?? null,
                 );
             }
         } while ($pageToken !== null);
@@ -261,7 +261,7 @@ class GoogleDriveDriver extends AbstractDriver
     {
         $response = $this->http->get("https://www.googleapis.com/drive/v3/files/{$id}", [
             'headers' => ['Authorization' => 'Bearer '.$this->auth->accessToken()],
-            'query' => ['fields' => 'id,name,size,md5Checksum'],
+            'query' => ['fields' => 'id,name,size,sha256Checksum'],
         ]);
 
         return HttpClientFactory::json($response);
@@ -276,7 +276,7 @@ class GoogleDriveDriver extends AbstractDriver
         try {
             $data = $this->fileMetadata($id);
 
-            return isset($data['md5Checksum']) ? (string) $data['md5Checksum'] : null;
+            return isset($data['sha256Checksum']) ? (string) $data['sha256Checksum'] : null;
         } catch (RequestException) {
             return null;
         }

@@ -69,24 +69,11 @@ abstract class AbstractDumper implements DumperContract
     protected function dumpViaProcess(string $command, string $outputPath, array $env = []): string
     {
         $gzip = $this->gzipEnabled();
-        $gzipBinary = $this->findBinary('gzip');
 
-        if ($gzip && $gzipBinary !== null) {
-            $cmd = sprintf('%s | %s -c > %s', $command, escapeshellarg($gzipBinary), escapeshellarg($outputPath));
-            $process = Process::fromShellCommandline($cmd);
-            $process->setTimeout($this->timeout());
-            $process->setEnv($env);
-            $process->run();
-
-            if (! $process->isSuccessful()) {
-                throw DumpFailedException::fromProcess($this->driverName(), $cmd, $process->getOutput(), $process->getErrorOutput(), $process->getExitCode() ?? -1);
-            }
-
-            $this->gzipped = true;
-
-            return $outputPath;
-        }
-
+        // Always stream to a plain file first. A shell pipe (e.g. `mysqldump | gzip -c`)
+        // masks the dumper's exit code on Windows — cmd.exe returns the LAST command's
+        // code — letting a failed dump slip through as "success". PHP zlib below is
+        // always available, so no external gzip binary is needed.
         $plain = $outputPath.'.plain';
         $handle = fopen($plain, 'wb');
 

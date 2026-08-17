@@ -23,12 +23,11 @@ class MySqlDumper extends AbstractDumper
         $output = $tempDir.'/dump-mysql.sql'.($this->gzipEnabled() ? '.gz' : '');
 
         $command = sprintf(
-            '%s --host=%s --port=%s --user=%s --single-transaction --quick --routines --triggers --events --no-tablespaces --hex-blob --set-gtid-purged=OFF --default-character-set=utf8mb4 %s',
+            '%s --host=%s --port=%s --user=%s --single-transaction --quick --routines --triggers --events --no-tablespaces --hex-blob --set-gtid-purged=OFF --default-character-set=utf8mb4',
             escapeshellarg($binary),
             escapeshellarg($config['host'] ?? '127.0.0.1'),
             escapeshellarg((string) ($config['port'] ?? 3306)),
-            escapeshellarg($config['username'] ?? 'root'),
-            escapeshellarg($config['database'] ?? '')
+            escapeshellarg($config['username'] ?? 'root')
         );
 
         if (! empty($config['unix_socket'])) {
